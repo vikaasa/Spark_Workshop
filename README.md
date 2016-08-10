@@ -1,4 +1,4 @@
-# Spark Workshop
+# Spark-ing your interest!
 
 ***
 ## Workshop Overview
