@@ -210,6 +210,34 @@ def sparking_your_interest():
 	print(output.show())
 	%time print(output.count())
 
+	output_tordd = output.rdd
+	train_rdd,test_rdd = output_tordd.randomSplit([0.8, 0.2], 123)
+	train_df = train_rdd.toDF()
+	test_df = test_rdd.toDF()
+	print(train_df)
+	print(test_df)
+
+	print('Train DF - Count: ')
+	print(train_df.count())
+	print('Test DF - Count: ')
+	print(test_df.count())
+
+	print("Initializing RF Model")
+	labelIndexer = StringIndexer(inputCol="speaker", outputCol="indexedLabel").fit(train_df)       
+	rf = RandomForestClassifier(labelCol="indexedLabel", featuresCol="features",numTrees=1000, featureSubsetStrategy="auto", impurity='gini', maxDepth=4, maxBins=32)
+	pipeline = Pipeline(stages=[labelIndexer,rf])
+	%time model = pipeline.fit(output)
+	print("Completed RF Model")
+
+	% time predictions = model.transform(test_df)
+	evaluator = MulticlassClassificationEvaluator(labelCol="indexedLabel", predictionCol="prediction", metricName="precision")
+	accuracy = evaluator.evaluate(predictions)
+	print("Test Error = %g" % (1.0 - accuracy))
+	rfModel = model.stages[1]
+	print(rfModel)  # summary only
+	print("Predictions: ")
+	print(predictions.show())
+
 def main():    
    
     # hiding logs
