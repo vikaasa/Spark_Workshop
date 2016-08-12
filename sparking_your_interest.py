@@ -1,10 +1,10 @@
+from __future__ import print_function
+from __future__ import division
 from pyspark.context import SparkContext
 from pyspark.sql import HiveContext
 from pyspark.sql.functions import *
 #from SparkJob import *
 #from log_parser import *
-from __future__ import print_function
-from __future__ import division
 import os
 import sys
 import json
@@ -180,11 +180,11 @@ def tf_feature_vectorizer(df,no_of_features,ip_col):
     idfModel = idf.fit(featurizedData)
     rescaled_data = idfModel.transform(featurizedData)
     rescaled_data.show(5)
-    %time rescaled_data.count()
+    print(rescaled_data.count())
     return rescaled_data
 
 def sparking_your_interest():
-	df = sqlContext.read.json('speeches_dataset.json')
+	df = SQLContext.read.json('speeches_dataset.json')
 	df_fillna=df.fillna("")
 	print(df_fillna.count())
 	print(df_fillna.printSchema())
@@ -208,7 +208,7 @@ def sparking_your_interest():
 	assembler_output = assembler.transform(df_with_4grams_idf_vectors)
 	output = assembler_output.selectExpr('speaker','speech_id','para_cleaned_text','features')
 	print(output.show())
-	%time print(output.count())
+	print(output.count())
 
 	output_tordd = output.rdd
 	train_rdd,test_rdd = output_tordd.randomSplit([0.8, 0.2], 123)
@@ -226,10 +226,10 @@ def sparking_your_interest():
 	labelIndexer = StringIndexer(inputCol="speaker", outputCol="indexedLabel").fit(train_df)       
 	rf = RandomForestClassifier(labelCol="indexedLabel", featuresCol="features",numTrees=1000, featureSubsetStrategy="auto", impurity='gini', maxDepth=4, maxBins=32)
 	pipeline = Pipeline(stages=[labelIndexer,rf])
-	%time model = pipeline.fit(output)
+	model = pipeline.fit(output)
 	print("Completed RF Model")
 
-	% time predictions = model.transform(test_df)
+	predictions = model.transform(test_df)
 	evaluator = MulticlassClassificationEvaluator(labelCol="indexedLabel", predictionCol="prediction", metricName="precision")
 	accuracy = evaluator.evaluate(predictions)
 	print("Test Error = %g" % (1.0 - accuracy))
@@ -241,7 +241,7 @@ def sparking_your_interest():
 def main():    
    
     # hiding logs
-    log4j = spark_context._jvm.org.apache.log4j
+    log4j = sc._jvm.org.apache.log4j
     log4j.LogManager.getRootLogger().setLevel(log4j.Level.ERROR)
 
     sparking_your_interest()
