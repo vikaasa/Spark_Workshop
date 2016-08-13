@@ -58,6 +58,51 @@ grped_data =map_rdd.groupBy(lambda x: x[0])
 counted_grped_data = grped_data.map(lambda x:(x[0],len(x[1])))
 counted_grped_data.collect()
 
+########################DF_OPERATIONS########################
+import string
+import os
+import random
+import sys
+import traceback
+import re
+import operator
+import time
+from pyspark.sql.functions import udf, size, col
+from string import digits
+from pyspark.sql import functions as F
+
+list_of_list1=[[1, 'Akash', 96],[2, 'Sunil', 89],[3, 'Joel', 97],[4, 'Ritika', 95],[5, 'Christina', 94],[6, 'Mike', 86]]
+list_of_list2=[[1,89,78],[2,87,94],[3,88,85],[4,94,91],[5,83,82],[6,95,92]]
+rdd1=sc.parallelize(list_of_list1)
+rdd2=sc.parallelize(list_of_list2)
+schema1=['id1','name','math']
+schema2=['id2','physics','biology']
+df1=rdd1.toDF(schema1)
+df2=rdd2.toDF(schema2)
+print("Time taken for joining 2 DFs:") 
+start=time.time()
+joined_df=df1.join(df2,(df1.id1 == df2.id2))
+print(joined_df.show())
+end=time.time()
+print(end-start)
+
+##Appending 2 DFs:
+
+#df_appended= df1.unionAll(df2)
+df_appended = joined_df.unionAll(joined_df)
+df_groupby_id=df_appended.groupBy('id1').agg(F.avg(df_appended.math))
+print(df_groupby_id.show())
+
+#df filter
+filtered_data=joined_df.filter(joined_df.math>95)
+print(filtered_data.show())
+#df sort
+df_sortby_name=joined_df.sort(joined_df.name.asc())
+print(df_sortby_name.show())
+    
+
+##Groupby:
+
 
 ########################filter#####################333
 filtered_data = counted_grped_data.filter(lambda x: True if x[0]=='hi' else False )
